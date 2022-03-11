@@ -283,7 +283,6 @@ public:
         {
             // Randomly generate integer from 0 to 2 (inclusively), and cast it into enumerated type JackalAttack
             randAttack = static_cast<JackalAttack>( rand() % 3 );
-            randAttack = SCARE;
             
             // Handle JackalAttack attack scenario cases
             switch ( randAttack )
@@ -437,10 +436,10 @@ public:
                         randWakeCave = rand() % 20 + 1;
                     }
                     
-                    cout << "\033[35Some time later, you awake in a daze... you determine you're in cave " << '(' << randWakeCave << ')' << "...\033[0m" << endl;
+                    cout << "\033[35mSome time later, you awake in a daze... you determine you're in cave " << '(' << randWakeCave << ')' << "...\033[0m" << endl;
                     
                     // Relocate player
-                    player->setCavePos(playerRandCave);
+                    player->setCavePos(randWakeCave);
                     
                     // Assign variable true since player was relocated
                     didMovePlayer = true;

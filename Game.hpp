@@ -280,9 +280,6 @@ public:
         
         cout << "\033[1m----------------------------------------------------------\033[0m" << endl;
         
-        cout << jackal.getCavePos() << endl;
-        cout << jackal2.getCavePos() << endl;
-        
         // Determine Jackal's next cave position
         jackal.findNextCave( basilisk.getCavePos(), pit.getCavePos(), map, n );
         

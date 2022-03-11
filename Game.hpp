@@ -197,52 +197,98 @@ public:
     }
     void showNeighborCaveMessages()
     {
-        for (auto &edge : edges)
+        bool jackalNear  = false;
+        bool jackal2Near = false;
+        bool jackalApproaching  = false;
+        bool jackal2Approaching = false;
+        
+        for (int i = 1; i <= 20; i++)
         {
-            // MARK: Player is adjacent to basilisk and EITHER:
-            // Hasn't disturbed basilisk this game
-            // Or, DID search cave where basilisk was disturbed
-            if ( edge.src == player.getCavePos() && edge.dest == basilisk.getCavePos() && basilisk.getCaveWhereDisturbed() == 0 )
+            for ( Pair v : map.adjList[i] )
             {
-                cout << "\033[34mYou hear a hissing sound...\033[0m" << endl;
+                // MARK: Player is adjacent to basilisk and EITHER:
+                // Hasn't disturbed basilisk this game
+                // Or, DID search cave where basilisk was disturbed
+                if ( i == player.getCavePos() && v.first == basilisk.getCavePos() && basilisk.getCaveWhereDisturbed() == 0 )
+                {
+                    cout << "\033[34mYou hear a hissing sound...\033[0m" << endl;
+                }
+                
+                // MARK: Player is adjacent to basilisk and BOTH:
+                // Has disturbed basilisk this game
+                // AND, DID NOT search save where he was was disturbed
+                if ( i       == player.getCavePos() &&
+                     v.first == basilisk.getCavePos() &&
+                     v.first != basilisk.getCaveWhereDisturbed() &&
+                     basilisk.getCaveWhereDisturbed() != 0 )
+                {
+                    cout << "\033[34mSomething feels wrong...\033[0m" << endl;
+                }
+                
+                // MARK: Player is next to cave where basilisk was disturbed and cave is unsearched since disturbance
+                if ( i == player.getCavePos() &&
+                     v.first == basilisk.getCaveWhereDisturbed() &&
+                     basilisk.getCaveWhereDisturbed() != 0 )
+                {
+                    cout << "\033[34mIt's dead silent...\033[0m" << endl;
+                }
+                
+                // MARK: Player is adjacent to a pit
+                if ( i == player.getCavePos() && v.first == pit.getCavePos() )
+                {
+                    cout << "\033[34mIt's so cold in here...\033[0m" << endl;
+                }
+                
+                // MARK: Player is adjacent to minerail source cave
+                if ( i == player.getCavePos() && v.first == minerail.getSrcCavePos() )
+                {
+                    cout << "\033[34mThe smell of rusting metal permeates the air...\033[0m" << endl;
+                }
+                
+                // MARK: Player is in an adjacent cave to Jackal
+                if ( i == player.getCavePos() && v.first == jackal.getCavePos() )
+                {
+                    jackalNear = true;
+                }
+                
+                // MARK: Player is in an adjacent cave to Jackal2
+                if ( i == player.getCavePos() && v.first == jackal2.getCavePos() )
+                {
+                    jackal2Near = true;
+                }
+                
+                // MARK: Print message if Jackal is headed towards Player
+                if ( i == player.getCavePos() && v.first == jackal.getCavePos() && jackal.getNextCavePos() == player.getCavePos() )
+                {
+                    jackalApproaching = true;
+                }
+                
+                // MARK: Print message if Jackal2 is headed towards Player
+                if ( i == player.getCavePos() && v.first == jackal2.getCavePos() && jackal2.getNextCavePos() == player.getCavePos() )
+                {
+                    jackal2Approaching = true;
+                }
             }
-            // MARK: Player is adjacent to basilisk and BOTH:
-            // Has disturbed basilisk this game
-            // AND, DID NOT search save where he was was disturbed
-            if ( edge.src == player.getCavePos() &&
-                 edge.dest == basilisk.getCavePos() &&
-                 edge.dest != basilisk.getCaveWhereDisturbed() &&
-                 basilisk.getCaveWhereDisturbed() != 0 )
-            {
-                cout << "\033[34mSomething feels wrong...\033[0m" << endl;
-            }
-            // MARK: Player is next to cave where basilisk was disturbed and cave is unsearched since disturbance
-            if ( edge.src == player.getCavePos() &&
-                 edge.dest == basilisk.getCaveWhereDisturbed() &&
-                 basilisk.getCaveWhereDisturbed() != 0 )
-            {
-                cout << "\033[34mIt's dead silent...\033[0m" << endl;
-            }
-            // MARK: Player is adjacent to a pit
-            if ( edge.src == player.getCavePos() && edge.dest == pit.getCavePos() )
-            {
-                cout << "\033[34mIt's so cold in here...\033[0m" << endl;
-            }
-            // MARK: Player is adjacent to minerail source cave
-            if ( edge.src == player.getCavePos() && edge.dest == minerail.getSrcCavePos() )
-            {
-                cout << "\033[34mThe smell of rusting metal permeates the air...\033[0m" << endl;
-            }
-            // MARK: Player is in an adjacent cave to Jackal
-            if ( edge.src  == player.getCavePos() && edge.dest == jackal.getCavePos() )
-            {
-                cout << "\033[34mFaint footsteps can be heard in the distance...\033[0m" << endl;
-            }
-            // MARK: Print message if Jackal is headed towards Player
-            if ( edge.src == player.getCavePos() && edge.dest == jackal.getCavePos() && jackal.getNextCavePos() == player.getCavePos() )
-            {
-                cout << "\033[34mThe footsteps grow louder...\033[0m" << endl;
-            }
+        }
+        
+        // Check if one or both Jackals are near Player
+        if ( jackalNear && jackal2Near )
+        {
+            cout << "\033[34mFootsteps echo from multiple directions...\033[0m" << endl;
+        }
+        else if ( (jackalNear && !jackal2Near) || (!jackalNear && jackal2Near) )
+        {
+            cout << "\033[34mFaint footsteps can be heard in the distance...\033[0m" << endl;
+        }
+        
+        // Check if one or both Jackals are approaching Player
+        if ( jackalApproaching && jackal2Approaching )
+        {
+            cout << "\033[34mThe echoes surrond you...\033[0m" << endl;
+        }
+        else if ( (jackalApproaching && !jackal2Approaching) || (!jackalApproaching && jackal2Approaching) )
+        {
+            cout << "\033[34mThe footsteps grow louder...\033[0m" << endl;
         }
     }
     void showCaveInfo()

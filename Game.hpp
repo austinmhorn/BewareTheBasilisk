@@ -47,6 +47,8 @@ private:
     Minerail minerail;
     // Create instance of class object Jackal to represent mobile hazard that object Player can encounter
     Jackal jackal;
+    // Create instance of class object Jackal to represent mobile hazard that object Player can encounter
+    Jackal jackal2;
     // Store cave postitions where a magic arrow randomly spawned
     vector<int> cavesWithArrow;
     // Control game loop
@@ -82,25 +84,30 @@ public:
         while( player.getCavePos()   == basilisk.getCavePos()     ||
                player.getCavePos()   == pit.getCavePos()          ||
                player.getCavePos()   == jackal.getCavePos()       ||
+               player.getCavePos()   == jackal2.getCavePos()      ||
                basilisk.getCavePos() == pit.getCavePos()          ||
                basilisk.getCavePos() == minerail.getSrcCavePos()  ||
                basilisk.getCavePos() == minerail.getDestCavePos() ||
                basilisk.getCavePos() == jackal.getCavePos()       ||
+               basilisk.getCavePos() == jackal2.getCavePos()      ||
                pit.getCavePos()      == minerail.getSrcCavePos()  ||
                pit.getCavePos()      == minerail.getDestCavePos() ||
-               pit.getCavePos()      == jackal.getCavePos() )
+               pit.getCavePos()      == jackal.getCavePos()       ||
+               pit.getCavePos()      == jackal2.getCavePos() )
         {
             // Store random values representing cave spawn location
-            int randPlayerCave = rand() % 20 + 1;
+            int randPlayerCave   = rand() % 20 + 1;
             int randBasiliskCave = rand() % 20 + 1;
-            int randPitCave = rand() % 20 + 1;
-            int randJackalCave = rand() % 20 + 1;
+            int randPitCave      = rand() % 20 + 1;
+            int randJackalCave   = rand() % 20 + 1;
+            int randJackal2Cave  = rand() % 20 + 1;
             
             // Assign random spawns
             player.setCavePos(randPlayerCave);
             basilisk.setCavePos(randBasiliskCave);
             pit.setCavePos(randPitCave);
             jackal.setCavePos(randJackalCave);
+            jackal2.setCavePos(randJackal2Cave);
         }
         
         cout << "\033[31m\033[1mWARNING\033[0m: \033[4mIn European bestiaries and legends, a basilisk is a legendary reptile reputed to be a serpent king, who can cause death with a single glance.\033[0m" << endl;
@@ -177,6 +184,9 @@ public:
                 
                 // Increment player's magic arrow count
                 player.addArrow();
+                
+                // Display number of arrows remaining in player inventory
+                cout << "\033[3mYou have " << player.getArrowCount() << " magic arrows remaining.\033[0m" << endl;
             }
             index++;
         }
@@ -224,8 +234,7 @@ public:
                 cout << "\033[34mThe smell of rusting metal permeates the air...\033[0m" << endl;
             }
             // MARK: Player is in an adjacent cave to Jackal
-            if ( edge.src  == player.getCavePos() &&
-                 edge.dest == jackal.getCavePos() )
+            if ( edge.src  == player.getCavePos() && edge.dest == jackal.getCavePos() )
             {
                 cout << "\033[34mFaint footsteps can be heard in the distance...\033[0m" << endl;
             }
@@ -254,10 +263,31 @@ public:
             }
         }
         
+        // Check if Player and Jackal2 encountered each other
+        if ( jackal2.getCavePos() == player.getCavePos() )
+        {
+            jackal2.attackPlayer( &player, basilisk.getCavePos(), pit.getCavePos(), map, n );
+            
+            if ( jackal2.didMovePlayer )
+            {
+                this->showPlayerMoveDialogue( player.getCavePos(), true );
+                if (isOver)
+                {
+                    return;
+                }
+            }
+        }
+        
         cout << "\033[1m----------------------------------------------------------\033[0m" << endl;
+        
+        cout << jackal.getCavePos() << endl;
+        cout << jackal2.getCavePos() << endl;
         
         // Determine Jackal's next cave position
         jackal.findNextCave( basilisk.getCavePos(), pit.getCavePos(), map, n );
+        
+        // Determine Jackal's next cave position
+        jackal2.findNextCave( basilisk.getCavePos(), pit.getCavePos(), map, n );
         
         // Check if player has encountered randomly spawned magic arrow
         this->checkForArrowFound();
@@ -387,6 +417,9 @@ public:
                 // Move Jackal
                 jackal.moveJackal( prevPlayerCavePos, player.getCavePos() );
                 
+                // Move Jackal2
+                jackal2.moveJackal( prevPlayerCavePos, player.getCavePos() );
+                
                 // Increment time step
                 timeStep++;
                 
@@ -399,6 +432,9 @@ public:
                 
                 // Move Jackal
                 jackal.moveJackal( prevPlayerCavePos, player.getCavePos() );
+                
+                // Move Jackal2
+                jackal2.moveJackal( prevPlayerCavePos, player.getCavePos() );
 
                 // Increment time step
                 timeStep++;
@@ -419,6 +455,9 @@ public:
                 
                 // Move Jackal
                 jackal.moveJackal( prevPlayerCavePos, player.getCavePos() );
+                
+                // Move Jackal2
+                jackal2.moveJackal( prevPlayerCavePos, player.getCavePos() );
 
                 // Increment time step
                 timeStep++;
@@ -584,7 +623,8 @@ public:
                                          newCavePos != pit.getCavePos()          &&
                                          newCavePos != minerail.getSrcCavePos()  &&
                                          newCavePos != minerail.getDestCavePos() &&
-                                         newCavePos != jackal.getCavePos() )
+                                         newCavePos != jackal.getCavePos()       &&
+                                         newCavePos != jackal2.getCavePos() )
                                     {
                                         isValid = true;
                                     }

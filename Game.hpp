@@ -110,6 +110,7 @@ public:
         cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
         cin.get();
         
+        cout << endl;
         cout << "\033[1mGAME START\033[0m" << endl;
     }
     void checkShouldSpawnArrow()

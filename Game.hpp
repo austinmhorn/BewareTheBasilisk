@@ -257,8 +257,6 @@ public:
         
         // Determine Jackal's next cave position
         jackal.findNextCave( basilisk.getCavePos(), pit.getCavePos(), map, n );
-        cout << "Basilisk is at " << basilisk.getCavePos() << endl;
-        cout << "Pit is at " << pit.getCavePos() << endl;
         
         // Check if player has encountered randomly spawned magic arrow
         this->checkForArrowFound();

@@ -204,7 +204,7 @@ public:
             }
         }
         
-        cout << "Jackal is in cave " << cavePos << endl;
+        //cout << "Jackal is in cave " << cavePos << endl;
         
         do
         {
@@ -227,7 +227,7 @@ public:
             }
         } while ( nextCavePos == basiliskPos || nextCavePos == pitPos );
         
-        cout << "Jackal will move to cave " << nextCavePos << endl;
+        //cout << "Jackal will move to cave " << nextCavePos << endl;
     }
     
     void moveJackal(int playerOldCave, int playerNewCave)

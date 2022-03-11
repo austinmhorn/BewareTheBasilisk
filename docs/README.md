@@ -1,7 +1,9 @@
 1. Move "BewareTheBasilisk" Folder to your Desktop
-2. Open Terminal.app
-3. Copy/Paste the following command into Terminal and press enter:
+2. Open Terminal.app 
+3. Copy/Paste the following command and press enter:
     cd ~/Desktop/BewareTheBasilisk
-    
-4. Enter "make" to build the program 
-5. Enter "make run" to play!
+4. Type "make" and press enter to build the program 
+5. Type "make run" and press enter to play!
+
+NOTE: Step 4 only needs to be performed once, as the program will remain built unless explicitly removed. If program IS already built. You will receive message similar to:
+    "make: `BewareTheBasilisk' is up to date." 

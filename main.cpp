@@ -20,6 +20,9 @@ int main()
         // Print relative cave information to user
         game.showCaveInfo();
         
+        // Sudden death of player loop handler
+        if ( game.over() ) { break; }
+        
         // Handle user input
         game.handleChoice();
     }

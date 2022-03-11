@@ -107,8 +107,10 @@ public:
         
         cout << endl;
         
-        cout << "Press \033[1mENTER\033[0m to begin...";
+        cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
         cin.get();
+        
+        cout << "\033[1mGAME START\033[0m" << endl;
     }
     void checkShouldSpawnArrow()
     {
@@ -116,18 +118,39 @@ public:
         // Prevents spawn on time step zero
         if ( (timeStep % 7 == 0) && (cavesWithArrow.size() <= 3) )
         {
+            bool isValid = false;
             int randCaveForArrow = 0;
-            // Loop runs while random cave for arrow is equal to:
-            // - 0 (Initiated value)
-            // - Player cave position
-            // - Pit cave position
-            // TODO: Add minecart config
-            while ( randCaveForArrow == 0 ||
-                    randCaveForArrow == basilisk.getCavePos() ||
-                    randCaveForArrow == pit.getCavePos() )
+            
+            do
             {
                 randCaveForArrow = rand() % 20 + 1;
-            }
+                // Loop runs while random cave for arrow is equal to:
+                // - 0 (Initiated value)
+                // - Player cave position
+                // - Pit cave position
+                if ( randCaveForArrow != 0 && randCaveForArrow != basilisk.getCavePos() && randCaveForArrow != pit.getCavePos() )
+                {
+                    isValid = true;
+                }
+                else isValid = false;
+                
+                if ( cavesWithArrow.size() > 0 )
+                {
+                    for ( auto caves : cavesWithArrow )
+                    {
+                        if (randCaveForArrow != caves)
+                        {
+                            isValid = true;
+                        }
+                        else
+                        {
+                            isValid = false;
+                        }
+                    }
+                }
+                else continue;
+                
+            } while ( !isValid );
             
             cavesWithArrow.push_back(randCaveForArrow);
             
@@ -146,7 +169,7 @@ public:
             if ( player.getCavePos() == caves )
             {
                 // Print message to terminal
-                cout << "You come across a dropped arrow from a previous hunter." << endl;
+                cout << "\033[33m\033[1mYou come across a dropped arrow from a previous hunter.\033[0m" << endl;
                 
                 // Erase element from vector
                 cavesWithArrow.erase( cavesWithArrow.begin() + index );
@@ -159,7 +182,7 @@ public:
     }
     void showMinerailFoundMessage()
     {
-        cout << "You discover an abandoned mineshaft with a minecart. It still works..." << endl;
+        cout << "\033[1m\033[33mYou discover an abandoned mineshaft with a minecart. It still works...\033[0m" << endl;
     }
     void showNeighborCaveMessages()
     {
@@ -182,35 +205,65 @@ public:
             {
                 cout << "\033[34mSomething feels wrong...\033[0m" << endl;
             }
+            // MARK: Player is next to cave where basilisk was disturbed and cave is unsearched since disturbance
             if ( edge.src == player.getCavePos() &&
                  edge.dest == basilisk.getCaveWhereDisturbed() &&
                  basilisk.getCaveWhereDisturbed() != 0 )
             {
                 cout << "\033[34mIt's dead silent...\033[0m" << endl;
             }
-            if ( edge.src == player.getCavePos() &&
-                 edge.dest == jackal.getCavePos() )
-            {
-                cout << "\033[34mFaint footsteps can be heard in the distance...\033[0m" << endl;
-            }
+            // MARK: Player is adjacent to a pit
             if ( edge.src == player.getCavePos() && edge.dest == pit.getCavePos() )
             {
                 cout << "\033[34mIt's so cold in here...\033[0m" << endl;
             }
+            // MARK: Player is adjacent to minerail source cave
             if ( edge.src == player.getCavePos() && edge.dest == minerail.getSrcCavePos() )
             {
                 cout << "\033[34mThe smell of rusting metal permeates the air...\033[0m" << endl;
+            }
+            // MARK: Player is in an adjacent cave to Jackal
+            if ( edge.src  == player.getCavePos() &&
+                 edge.dest == jackal.getCavePos() )
+            {
+                cout << "\033[34mFaint footsteps can be heard in the distance...\033[0m" << endl;
+            }
+            // MARK: Print message if Jackal is headed towards Player
+            if ( edge.src == player.getCavePos() && edge.dest == jackal.getCavePos() && jackal.getNextCavePos() == player.getCavePos() )
+            {
+                cout << "\033[34mThe footsteps grow louder...\033[0m" << endl;
             }
         }
     }
     void showCaveInfo()
     {
-                
+        
+        // Check if Player and Jackal encountered each other
+        if ( jackal.getCavePos() == player.getCavePos() )
+        {
+            jackal.attackPlayer( &player, basilisk.getCavePos(), pit.getCavePos(), map, n );
+            
+            if ( jackal.didMovePlayer )
+            {
+                this->showPlayerMoveDialogue( player.getCavePos(), true );
+                if (isOver)
+                {
+                    return;
+                }
+            }
+        }
+        
+        cout << "\033[1m----------------------------------------------------------\033[0m" << endl;
+        
+        // Determine Jackal's next cave position
+        jackal.findNextCave( basilisk.getCavePos(), pit.getCavePos(), map, n );
+        cout << "Basilisk is at " << basilisk.getCavePos() << endl;
+        cout << "Pit is at " << pit.getCavePos() << endl;
+        
         // Check if player has encountered randomly spawned magic arrow
         this->checkForArrowFound();
         
-        cout << "\033[1m**********************************************************\033[0m" << endl;
-                
+        // Randomly spawn magic arrow on map every 7 time steps, excluding time step zero
         if ( timeStep > 0 )
         {
             // Check if magic arrow should randomly spawn
@@ -225,9 +278,9 @@ public:
         
         // Print harmful neighbor cave information if relevant
         this->showNeighborCaveMessages();
-        
+                
         // Print current cave information to terminal
-        cout << "You are in cave: " << '(' << player.getCavePos() << ')' << endl;
+        cout << "\033[1m\033[4mYou are in cave: " << '(' << player.getCavePos() << ')' << "\033[0m" << endl;
         
         // Print adjacent caves values
         cout << "A sign tells you that neighboring caves are: ";
@@ -244,7 +297,8 @@ public:
     {
         string line;
         char choice;
-        if ( player.getCavePos() == minerail.getSrcCavePos() ) {
+        if ( player.getCavePos() == minerail.getSrcCavePos() )
+        {
             cout << "\033[3m*** Enter 'R' to Ride Minerail ***\033[0m" << endl;
             cout << "Will you Move, Shoot, or Ride Minerail? (M/S/R): ";
         }
@@ -266,57 +320,8 @@ public:
         
         return static_cast<PlayerOptions>(static_cast<char>(toupper(static_cast<unsigned int>(choice))));
     }
-    void handleChoice()
-    {
-        switch( this->getPlayerMoveOrShoot() )
-        {
-            case MOVE:
-                this->playerMove();
-                
-                // Increment time step
-                timeStep++;
-                
-                break;
-                
-            case SHOOT:
-                this->playerShoot();
-                
-                // Increment time step
-                timeStep++;
-                
-                // Prevents enter press when player has won
-                if ( !isOver )
-                {
-                    cout << "Press \033[1mENTER\033[0m to continue...";
-                    cin.get();
-                }
-                break;
-                
-            case RIDE:
-                this->playerRide();
-                
-                // Increment time step
-                timeStep++;
-                
-                cout << "Press \033[1mENTER\033[0m to continue...";
-                cin.get();
-                break;
-                
-            default:
-                cout << "Enter 'M'/'m' to move, or enter 'S'/'s' to shoot." << endl;
-                
-                // Wait for user to continue
-                cout << "Press \033[1mENTER\033[0m to continue...";
-                cin.get();
-                break;
-        }
-        
-        if ( isOver )
-        {
-            cout << "\033[1mGAME OVER\033[0m" << endl;
-        }
-    }
-    void playerMove()
+    
+    int getPlayerMoveDestination()
     {
         string line;
         int caveMoveDest;
@@ -335,61 +340,178 @@ public:
         if ( !caveMoveDest )
         {
             cout << "Invalid entry" << endl;
-            return;
+            return 0;
         }
+        
+        return caveMoveDest;
+    }
+    
+    int getPlayerShootDestination()
+    {
+        string line;
+        int caveShootDest;
+        cout << "Enter a cave to shoot into: ";
+        getline(cin, line);
+        if ( line.size() > 0 && line.size() < 3 )
+        {
+            
+            // Access and assign
+            caveShootDest = static_cast<int>( stoi( line ) );
+        }
+        else
+        {
+            // String was empty or contained too many characters; assigned '0' to represent 'invalid'
+            caveShootDest = 0;
+        }
+        
+        // Exit function if shoot destination is invalid
+        if ( !caveShootDest )
+        {
+            cout << "Invalid entry" << endl;
+            return 0;
+        }
+        
+        return caveShootDest;
+    }
+    
+    void handleChoice()
+    {
+        // Store cave position before move
+        int prevPlayerCavePos = player.getCavePos();
+        
+        switch( this->getPlayerMoveOrShoot() )
+        {
+            case MOVE:
+                // Move Player
+                this->playerMove();
+                
+                // Move Jackal
+                jackal.moveJackal( prevPlayerCavePos, player.getCavePos() );
+                
+                // Increment time step
+                timeStep++;
+                
+                break;
+                
+            case SHOOT:
+                
+                // Player shoot magic arrow
+                this->playerShoot();
+                
+                // Move Jackal
+                jackal.moveJackal( prevPlayerCavePos, player.getCavePos() );
+
+                // Increment time step
+                timeStep++;
+                
+                // Prevents enter press when player has won
+                if ( !isOver )
+                {
+                    cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
+                    cin.get();
+                }
+                
+                break;
+                
+            case RIDE:
+                
+                // Player ride minecart
+                this->playerRide();
+                
+                // Move Jackal
+                jackal.moveJackal( prevPlayerCavePos, player.getCavePos() );
+
+                // Increment time step
+                timeStep++;
+                
+                cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
+                cin.get();
+                
+                break;
+                
+            default:
+                cout << "Enter 'M'/'m' to move, or enter 'S'/'s' to shoot." << endl;
+                
+                // Wait for user to continue
+                cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
+                cin.get();
+                
+                break;
+        }
+        
+        if ( isOver )
+        {
+            cout << "\033[1mGAME OVER\033[0m" << endl;
+        }
+    }
+    void showPlayerMoveDialogue(int caveMoveDest, bool ignoreConfirmMessage = false)
+    {
+        if ( !ignoreConfirmMessage )
+        {
+            // Print message to player to confirm move choice
+            cout << "\033[1m\033[4mYou stagger through a pitch black tunnel towards cave " << '(' << caveMoveDest << ')' << "\033[0m" << endl;
+            
+            // Wait for user to continue
+            cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
+            cin.get();
+        }
+        
+        //  Player is moving into cave where basilisk resides and cave where disturbed was checked or irrelevant
+        if ( caveMoveDest == basilisk.getCavePos() && basilisk.getCaveWhereDisturbed() == 0)
+        {
+            isOver = true;
+            cout << "\033[31mAs you walk in, you look up and lock eyes with the Basilisk.\033[0m" << endl;
+            cout << "\033[31m\033[1m\033[4mAt least it was quick...\033[0m" << endl;
+        }
+        //  Player is moving into cave where basilisk resides and basilisk has been disturbed without player checking cave
+        else if ( caveMoveDest == basilisk.getCavePos() && basilisk.getCaveWhereDisturbed() != 0)
+        {
+            isOver = true;
+            cout << "\033[31m\033[1mThe Basilisk jumps out from nowhere and tears you to shreds...\033[0m" << endl;
+            cout << "\033[4mBasilisk hunters must act fearless in the face of danger...\033[0m" << endl;
+        }
+        // If player if moving to where basilisk was disturbed and basilisk has moved, reset variables
+        else if( caveMoveDest == basilisk.getCaveWhereDisturbed() && caveMoveDest != basilisk.getCavePos() )
+        {
+            cout << "\033[1m\033[4mAs you enter, you hear a loud crash echo from one of the tunnels...\033[0m" << endl;
+            cout << "\033[1m\033[4mWhatever it was must've ran... It was wise to come check.\033[0m" << endl;
+            basilisk.setCaveWhereDisturbed(0);
+            
+            // Set player cave to position new cave
+            player.setCavePos(caveMoveDest);
+            
+            cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
+            cin.get();
+        }
+        // Player is moving into cave where a pit resides
+        else if ( caveMoveDest == pit.getCavePos() )
+        {
+            isOver = true;
+            cout << "\033[1m\033[1m\033[4mYou didn't even have time to react before stumbling into a pit.\033[0m" << endl;
+            cout << "\033[1m\033[4mNot too savvy...\033[0m" << endl;
+        }
+        // Player can safely move into new cave
+        else
+        {
+            // Set player cave to position new cave
+            player.setCavePos(caveMoveDest);
+        }
+    }
+    void playerMove()
+    {
+        // Fetch cave move destination from user
+        int caveMoveDest = getPlayerMoveDestination();
+        
+        // Bad input given
+        if ( !caveMoveDest ) { return; }
         
         for (auto &edge : edges)
         {
             // Found edge player is traveling across
             if ( edge.src == player.getCavePos() && edge.dest == caveMoveDest )
             {
-                // Print message to player to confirm move choice
-                cout << "You stagger through a pitch black tunnel towards cave " << '(' << caveMoveDest << ')' << endl;
-                
-                // Wait for user to continue
-                cout << "Press \033[1mENTER\033[0m to continue...";
-                cin.get();
-                
-                //  Player is moving into cave where basilisk resides and cave where disturbed was checked or irrelevant
-                if ( caveMoveDest == basilisk.getCavePos() && basilisk.getCaveWhereDisturbed() == 0)
-                {
-                    isOver = true;
-                    cout << "\033[31mAs you walk in, you look up and lock eyes with the Basilisk.\033[0m" << endl;
-                    cout << "\033[31m\033[1m\033[4mAt least it was quick...\033[0m" << endl;
-                }
-                //  Player is moving into cave where basilisk resides and basilisk has been disturbed without player checking cave
-                else if ( caveMoveDest == basilisk.getCavePos() && basilisk.getCaveWhereDisturbed() != 0)
-                {
-                    isOver = true;
-                    cout << "\033[31m\033[1mThe Basilisk jumps out from nowhere and tears you to shreds...\033[0m" << endl;
-                    cout << "\033[4mBasilisk hunters must act fearless in the face of danger...\033[0m" << endl;
-                }
-                // If player if moving to where basilisk was disturbed and basilisk has moved, reset variables
-                else if( caveMoveDest == basilisk.getCaveWhereDisturbed() && caveMoveDest != basilisk.getCavePos() )
-                {
-                    cout << "As you enter, you hear a loud crash echo from one of the tunnels..." << endl;
-                    cout << "Whatever it was must've ran... It was wise to come check." << endl;
-                    basilisk.setCaveWhereDisturbed(0);
-                    
-                    // Set player cave to position new cave
-                    player.setCavePos(caveMoveDest);
-                    
-                    cout << "Press \033[1mENTER\033[0m to continue...";
-                    cin.get();
-                }
-                // Player is moving into cave where a pit resides
-                else if ( caveMoveDest == pit.getCavePos() )
-                {
-                    isOver = true;
-                    cout << "You didn't even have time to react before stumbling into a pit." << endl;
-                    cout << "Not too savvy..." << endl;
-                }
-                // Player can safely move into new cave
-                else
-                {
-                    // Set player cave to position new cave
-                    player.setCavePos(caveMoveDest);
-                }
+                // Print dialogue for scenario
+                showPlayerMoveDialogue(caveMoveDest);
                 
                 // Exit function loop to prevent further unneccesary execution
                 return;
@@ -401,28 +523,10 @@ public:
         // Player has 1 or more arrows
         if ( player.getArrowCount() )
         {
-            string line;
-            int caveShootDest;
-            cout << "Enter a cave to shoot into: ";
-            getline(cin, line);
-            if ( line.size() > 0 && line.size() < 3 )
-            {
-                
-                // Access and assign
-                caveShootDest = static_cast<int>( stoi( line ) );
-            }
-            else
-            {
-                // String was empty or contained too many characters; assigned '0' to represent 'invalid'
-                caveShootDest = 0;
-            }
+            int caveShootDest = getPlayerShootDestination();
             
-            // Exit function if shoot destination is invalid
-            if ( !caveShootDest )
-            {
-                cout << "Invalid entry" << endl;
-                return;
-            }
+            // Bad input given
+            if ( !caveShootDest ) { return; }
             
             // Parse edges
             for (auto &edge : edges)
@@ -432,10 +536,10 @@ public:
                 {
                     
                     // Print message to user confirming choice to shoot magic arrow
-                    cout << "You fire a magic arrow into cave " << '(' << caveShootDest << ')' << endl;
+                    cout << "\033[1m\033[4mYou fire a magic arrow into cave " << '(' << caveShootDest << ')' << "\033[0m" << endl;
                     
                     // Wait for user to continue
-                    cout << "Press \033[1mENTER\033[0m to continue...";
+                    cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
                     cin.get();
                     
                     // Check if basilisk resides in cave being shot into
@@ -504,7 +608,7 @@ public:
                                 basilisk.setCavePos(newCavePos);
                             }
                             // Regardless if basilisk moved, his status is set to disturbed and same message is given
-                            cout << "An uproar bellows from the cave..." << endl;
+                            cout << "\033[1m\033[3mAn uproar bellows from the cave...\033[0m" << endl;
                             basilisk.setCaveWhereDisturbed(caveShootDest);
                         }
                         
@@ -514,7 +618,7 @@ public:
                     // Player shot arrow into 'empty' cave
                     else
                     {
-                        cout << "Nothing happens... You lose your arrow in the darkness." << endl;
+                        cout << "\033[1m\033[4mNothing happens... You lose your arrow in the darkness.\033[0m" << endl;
                     }
                     
                     // Exit loop to prevent further unneccesary execution
@@ -525,7 +629,7 @@ public:
             player.removeArrow();
             
             // Display number of arrows remaining in player inventory
-            cout << "You have " << player.getArrowCount() << " magic arrows remaining." << endl;
+            cout << "\033[3mYou have " << player.getArrowCount() << " magic arrows remaining.\033[0m" << endl;
         }
         // Player has 0 magic arrows remaining
         else
@@ -543,7 +647,7 @@ public:
         
         player.setCavePos( destCave );
         
-        cout << "You find yourself arriving in cave " << '(' << destCave << ')' << endl;
+        cout << "\033[1m\033[4mYou find yourself arriving in cave " << '(' << destCave << ')' << "\033[0m" << endl;
         
         bool isValid = false;
         int randNewSrcCave;

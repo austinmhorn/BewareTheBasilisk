@@ -508,6 +508,9 @@ public:
                 cout << "Press \033[33m\033[1mENTER\033[0m to continue...";
                 cin.get();
                 
+                // Check for hazards after riding minecart
+                checkHazardsAfterRide();
+                
                 break;
                 
             default:
@@ -750,6 +753,25 @@ public:
         
         minerail.setSrcCavePos(randNewSrcCave);
         minerail.setDestCavePos(randNewDestCave);
+    }
+    
+    void checkHazardsAfterRide()
+    {
+        // Check for riding into Basilisk room
+        if ( player.getCavePos() == basilisk.getCavePos() )
+        {
+            isOver = true;
+            cout << "\033[31mRight as you look up, you lock eyes with the Basilisk.\033[0m" << endl;
+            cout << "\033[31m\033[1m\033[4mYou didn't even have time to react...\033[0m" << endl;
+        }
+        // Check for riding into Pit room
+        else if ( player.getCavePos() == pit.getCavePos() )
+        {
+            isOver = true;
+            cout << "\033[1m\033[4mThe minecart is going so fast that it busts through the end of the track, and you plummet into a pit.\033[0m" << endl;
+            cout << "\033[1m\033[4mThat's just unlucky...\033[0m" << endl;
+        }
+        
     }
 };
 

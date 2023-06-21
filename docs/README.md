@@ -1,5 +1,14 @@
 <p align="center">
     <h3 align="center"><b>
+      Make sure you have git </b><br>
+    </h3>
+</p>
+
+    sudo apt-get install git-all
+
+
+<p align="center">
+    <h3 align="center"><b>
       Clone repo </b><br>
     </h3>
 </p>

@@ -9,7 +9,7 @@
 
 <p align="center">
     <h3 align="center"><b>
-      Clone repo </b><br>
+      Clone this repository </b><br>
     </h3>
 </p>
 
